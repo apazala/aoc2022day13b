@@ -2,6 +2,11 @@
 {
     abstract class Signal:IComparable<Signal>
     {
+        private static int instancesCounter = 0;
+
+        private int id;
+
+        public int Id{get => id;}
         public static Signal CreateSignal(string s, ref int i)
         {   
             if(s[i] == ',')
@@ -15,6 +20,11 @@
                 return new SignalInt(s, ref i);
         }
 
+        public Signal()
+        {
+            id = instancesCounter++;
+        }
+
         public abstract int CompareTo(Signal? other);
     }
 
@@ -22,12 +32,12 @@
     {
         private List<Signal> itemsList;
 
-        public SignalArr(SignalInt sig)
+        public SignalArr(SignalInt sig):base()
         {
             itemsList = new List<Signal>();
             itemsList.Add(sig);
         }
-        public SignalArr(string s, ref int i)
+        public SignalArr(string s, ref int i):base()
         {
             itemsList = new List<Signal>();
             while(s[i] != ']')
@@ -39,7 +49,7 @@
 
         public override int CompareTo(Signal? other)
         {
-            SignalArr? sig2;
+            SignalArr sig2;
             if(other is SignalInt){
                 sig2 = new SignalArr((SignalInt)other);
             } else {
@@ -72,7 +82,7 @@
     class SignalInt:Signal
     {
         int v;
-        public SignalInt(string s, ref int i)
+        public SignalInt(string s, ref int i):base()
         {
             v = 0;
             while(i < s.Length && s[i] >= '0' && s[i] <= '9')
@@ -101,44 +111,48 @@
 
     private static void Main(string[] args)
     {
-        List<KeyValuePair<Signal, int>> signalsList = new List<KeyValuePair<Signal, int>>();
+        List<Signal> signalsList = new List<Signal>();
         string[] lines = File.ReadAllLines("input.txt");
-        int i, j;
+        int j;
         Signal sig;
-        for(i = 0; i < lines.Length; i++)
+        for(int i = 0; i < lines.Length; i++)
         {
             j = 0;
             sig = Signal.CreateSignal(lines[i++], ref j);
-            signalsList.Add(new KeyValuePair<Signal, int>(sig, i));
+            signalsList.Add(sig);
             
             j = 0;
             sig= Signal.CreateSignal(lines[i++], ref j);
-            signalsList.Add(new KeyValuePair<Signal, int>(sig, i));
+            signalsList.Add(sig);
         }
 
-        int id1 = i++;
-        int id2 = i;
 
         j = 0;
         sig = Signal.CreateSignal("[[2]]", ref j);
-        signalsList.Add(new KeyValuePair<Signal, int>(sig, id1));
+        signalsList.Add(sig);
+
+        int id1 = sig.Id;
+
         j = 0;
         sig = Signal.CreateSignal("[[6]]", ref j);
-        signalsList.Add(new KeyValuePair<Signal, int>(sig, id2));
+        signalsList.Add(sig);
 
-        signalsList.Sort((x, y) => x.Key.CompareTo(y.Key));
+
+        int id2 = sig.Id;
+
+        signalsList.Sort();
 
         int pos1 = -1;
         int pos2 = -1;
-        i = 1;
-        foreach(KeyValuePair<Signal, int> pair in signalsList)
+        int posi = 1;
+        foreach(Signal s in signalsList)
         {
-            if(pair.Value == id1){
-                pos1 = i;
-            }else if(pair.Value == id2){
-                pos2 = i;
+            if(s.Id== id1){
+                pos1 = posi;
+            }else if(s.Id == id2){
+                pos2 = posi;
             }
-            i++;
+            posi++;
         }
 
         Console.WriteLine(pos1*pos2);
